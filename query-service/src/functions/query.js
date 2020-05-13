@@ -19,28 +19,37 @@ module.exports.query = async event => {
       '#RangeKey': 'sk'
     }
   }
-  let response = {}
   try {
     const dynamodb = new AWS.DynamoDB.DocumentClient()
     const queryResult = await dynamodb.query(queryParams).promise()
     console.log('queryParams', queryParams)
     console.log('queryResult', queryResult)
-    response = queryResult.Items.map(resultItem => {
-      return resultItem.url
-    })
+    const items = []
+    for (const itemResult of queryResult.Items) {
+      console.log(itemResult)
+      items.push(itemResult.url)
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        items: items
+      }),
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
   } catch (queryError) {
     console.log('There was an error querying the database')
     console.log('queryError', queryError)
     console.log('queryParams', queryParams)
-    return new Error('There was an error querying the database')
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'There was an error querying the database'
+      }),
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
   }
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      response
-    ),
-  };
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
 };

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Query Page</title>
+</head>
+<body>
+<h1>Serverless Search Engine</h1>
+<input id="keywords" name="search" type="text" />
+<button id="submitbutton" name="submit" type="submit">SEARCH!</button>
+
+<div id="results">
+    <ul id="resultList">
+
+    </ul>
+</div>
+<script type="application/javascript">
+    document.getElementById("submitbutton").onclick = function submitQuery() {
+      var urlToQuery = "https://qhrpoe8zr8.execute-api.us-east-1.amazonaws.com/dev/v1/query";
+      fetch(urlToQuery, {
+        method: 'POST',
+        mode: 'cors',
+        body: JSON.stringify({
+          search: document.getElementById('keywords').value
+        })
+      }).then(response => response.json())
+        .then(data => {
+          data.items.forEach(item => {
+            var textNode = document.createTextNode("<li>"+item+"</li>")
+            document.getElementById("resultList").appendChild(textNode)
+          })
+      })
+    }
+</script>
+</body>
+</html>
