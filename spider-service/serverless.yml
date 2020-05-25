@@ -37,6 +37,12 @@ provider:
         - sns:Publish
       Resource:
         - Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${{self:service}}-sse-scrapePageTopic-${{self:custom.stage}}
+    - Effect: "Allow"
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:Query
+      Resource:
+        - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${{self:service}}-urls-${{opt:stage, 'dev'}}
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:ListBucket"
@@ -53,6 +59,8 @@ provider:
 
 # you can define service wide environment variables here
   environment:
+    DYNAMODB_URLS_TABLE: ${{self:service}}-urls-${{opt:stage, 'dev'}}
+    SCRAPER_BATCH_SIZE: ${param:SCRAPER_BATCH_SIZE}
     SNS_SCRAPE_PAGE_TOPIC:
       Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${{self:service}}-sse-scrapePageTopic-${{self:custom.stage}}
 #    SNS_SCRAPE_PAGE_TOPIC: arn:aws:sns:${self:provider.region}:*:${self:service}-sse-scrapePageTopic-${opt:stage, 'dev'}
@@ -72,6 +80,7 @@ functions:
     handler: src/functions/scraper.scraper
     events:
       - sns: ${{self:service}}-sse-scrapePageTopic-${{opt:stage, 'dev'}}
+    timeout: 30
   startScraping:
     handler: src/functions/startScraping.startScraping
     events:
@@ -120,6 +129,19 @@ functions:
 
 # you can add CloudFormation resource templates here
 
+resources:
+  Resources:
+    urlsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: url
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: url
+            KeyType: HASH
+        TableName: ${{self:service}}-urls-${{opt:stage, 'dev'}}
 #resources:
 #  Resources:
 #    NewResource:

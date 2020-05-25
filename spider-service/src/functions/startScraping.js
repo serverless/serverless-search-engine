@@ -1,6 +1,7 @@
 'use strict'
 const AWS = require('aws-sdk')
 module.exports.startScraping = async event => {
+  const batchSize = process.env.SCRAPER_BATCH_SIZE
   const sns = new AWS.SNS()
   const messageParams = {
     TopicArn: process.env.SNS_SCRAPE_PAGE_TOPIC,
